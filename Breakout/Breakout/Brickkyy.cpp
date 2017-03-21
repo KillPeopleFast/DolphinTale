@@ -13,6 +13,7 @@ public:
 	void draw();
 	bool isDead();
 	void killBrick();
+	int BrickCollision(int bouncer_x, int bouncer_y);
 private:
 	int xCoordinate;
 	int yCoordinate;
@@ -33,13 +34,13 @@ int main(int argc, char **argv)
 
 
 	//here's the bouncer's x and y coordinates on the screen, initally set to 30,30
-	float bouncer_x = 30;
-	float bouncer_y = 30;
+	float bouncer_x = 250;
+	float bouncer_y = 230;
 	float bouncer_h = 32;
 	float bouncer_w = 32;
 	//here's the bouncer's x and y directions, initially set to -4, 4
 	float bouncer_dx = -4.0, bouncer_dy = 4.0;
-	
+
 
 
 	//these two variables hold the x and y positions of the square
@@ -106,21 +107,21 @@ int main(int argc, char **argv)
 
 	al_start_timer(timer);
 
-	
+
 	Brick b1;
 	b1.initBrick(2, 0, 75, 35);
 
 	Brick b2;
 	b2.initBrick(80, 0, 75, 35);
-	
+
 	Brick b3;
 	b3.initBrick(160, 0, 75, 35);
 
 	Brick b4;
-	b4.initBrick(240, 0, 75, 35); 
+	b4.initBrick(240, 0, 75, 35);
 
 	Brick b5;
-	b5.initBrick(320, 0, 75, 35); 
+	b5.initBrick(320, 0, 75, 35);
 
 	Brick b6;
 	b6.initBrick(400, 0, 75, 35);
@@ -154,7 +155,7 @@ int main(int argc, char **argv)
 
 	Brick b16;
 	b16.initBrick(565, 45, 75, 35);
-	
+
 	//////////////////row 3
 	//Brick b17;
 	//b9.initBrick(5, 90, 75, 35);
@@ -231,14 +232,17 @@ int main(int argc, char **argv)
 			bouncer_x += bouncer_dx;
 			bouncer_y += bouncer_dy;
 
-			
+
 			if (collision(square_x, square_y, square_w, square_h, bouncer_x, bouncer_y, bouncer_w, bouncer_h) == 1) {
 				bouncer_dx = -bouncer_dx;
-				
+
 			}
-			
-			//redraw at every tick of the timer
-			redraw = true;
+			if (b1.BrickCollision(bouncer_x, bouncer_y) && b1.isDead() == false) {
+				b1.killBrick();
+				bouncer_dy = -bouncer_dy;
+			}
+				//redraw at every tick of the timer
+				redraw = true;
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +275,7 @@ int main(int argc, char **argv)
 		//has something been released on the keyboard?
 		else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
 			switch (ev.keyboard.keycode) {
-		
+
 			case ALLEGRO_KEY_LEFT:
 				key[2] = false;
 				break;
@@ -295,9 +299,10 @@ int main(int argc, char **argv)
 
 			//paint black over the old screen, so the old square dissapears
 			al_clear_to_color(al_map_rgb(0, 0, 0));
-			
+
 			//Draw Bricks
-			b1.draw();
+			if (b1.isDead()== false)
+				b1.draw();
 			b2.draw();
 			b3.draw();
 			b4.draw();
@@ -313,14 +318,14 @@ int main(int argc, char **argv)
 			b14.draw();
 			b15.draw();
 			b16.draw();
-			
+
 			//b17.draw();
 			/*b18.draw();
 			b19.draw();
 			b20.draw();
 */
-			//the algorithm above just changes the x and y coordinates
-			//here's where the bitmap is actually drawn somewhere else
+//the algorithm above just changes the x and y coordinates
+//here's where the bitmap is actually drawn somewhere else
 			al_draw_bitmap(square, square_x, square_y, 0);
 			al_draw_bitmap(bouncer, bouncer_x, bouncer_y, 0);
 			al_flip_display();
@@ -339,7 +344,7 @@ int collision(int b1x, int b1y, int b1w, int b1h, int b2x, int b2y, int b2w, int
 	if ((b1x > b2x + b2w) || //is box1 to the right of box2
 		(b1x + b1w < b2x) || //is box1 to the LEFT of box2
 		(b1y > b2y + b2h) || //is box1 below box2
-		(b1y + b1h< b2y)) //is box1 above box2
+		(b1y + b1h < b2y)) //is box1 above box2
 		return 0;
 
 	else {
@@ -356,7 +361,17 @@ Brick::Brick() {
 	Dead = 0;
 
 }
-
+int Brick::BrickCollision(int bouncer_x, int bouncer_y) {
+	if ((xCoordinate > bouncer_x + 32) ||
+		(xCoordinate + width < bouncer_x) ||
+		(yCoordinate > bouncer_y + 32) ||
+		(yCoordinate + height < bouncer_y))
+	{
+		return 0;
+	}
+	else
+		return 1;
+}
 void Brick::initBrick(int x, int y, int w, int h) {
 	xCoordinate = x;
 	yCoordinate = y;
@@ -370,7 +385,9 @@ void Brick::draw() {
 	al_draw_filled_rectangle(xCoordinate, yCoordinate, xCoordinate + width, yCoordinate + height, al_map_rgb(100, 0, 0));
 }
 
-void Brick::isDead() {}
+bool Brick::isDead() {
+	return Dead;
+}
 
 void Brick::killBrick() {
 	Dead = true;
